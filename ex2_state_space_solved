@@ -1,0 +1,402 @@
+#STATE SPACE ANALYSIS SOLVED 
+import numpy as np
+import matplotlib.pyplot as plt 
+
+#we have a network of neurons comprising 2 populations that have activity rates that change over time
+#we want to see the activity vector v = [v1(t), v2(t)]Transpose (changes it to column form) evolve over time in the 
+#state space, ie - v1-v2 plane. Every possible state of my system is a single point on this plane, activities change 
+#and the system moves through this plane on a TRAJECTORY 
+
+
+#A is our connectivity matrix which encodes the interactions between the two populations of neurons (the columns)
+#the rows in the matrix signify what causes the changes in activity for each population i.e. v1 and v2 
+#so the rows denote the input signals that each population receives (from itself and population 2) and 
+#how strong each connection is. 
+
+#v1 arrives at connection matrix A, the signal from population in in row is is -2, so it inhibits 
+#itself because it is a negative value and it receives the signal of strength 3 from population 2 
+#which means that the effect of population 2 on population 1 is strong and positive 
+
+"""the equation of motion: dv/dt = A*v + b where A is the matrix, v is activity and b is a constant 
+#external input, this equation denotes the rate of change of activity equals the network's influence
+on itself plus external input, so at every point in time, the dynamic equation of motion tells me 
+how fast and in which direction my activity vector is changing 
+
+- Fixed point: a fixed point is a state where the rate of change is 0, a fixed point could also be a 
+steady state. So, at v_ss, dv/dt = 0. Plug 0 into the equation of motion and we get the equation for 
+FIXED POINT CONDITION : A*v_ss + b = 0 where the activity vector comprised of the activity levels for 
+both populations, which is why we have v1 and v2, - IS 0, no activity happens at v_ss. 
+
+-A nullcline is just a geometrical line in the v1-v2 space where one of the activity levels are 0, 
+if v1 is 0, v2 could still be working. So they're points in the plane where they are momentarily 
+'frozen'
+At the point in the plane where both intersect, we have our 
+fixed point. 
+
+Given to us: v_ss = [10 10], what should the external vector input (b) be to make this happen 
+
+From the fixed point condition 0 = A * v_ss +  b [we solve for b]
+-A * v_ss = b (rearrange terms by isolating b)
+
+#we just multiply A by the desired fixed point and 'flip the sign'
+
+#upon computing by hand, b = [-10 10]"""
+
+
+#Task A 
+
+#set up connectivity matrix A 
+A = np.array([[-2,3],[-3,2]])
+
+#desired fixed point v_ss
+
+v_ss = np.array([10, 10])
+
+#compute b from fixed point condition b = -A * v_ss (@ is the matrix multiplication operator in numpy)
+b = -A @ v_ss
+
+print(f'The external input b = {b}') #should show [-10,10]
+
+#calculate fixed_point using np.linalg.solve(A,-b)
+"""it solves the equation A*v_ss = -B and finds the point satisfying both nullcline equations smltaneously
+satisfying both nullclines at once = satisfying fixed point condition 
+np.linal.solve finds intersection of 2 nullclines by treating them as a system of 2 equations with 
+2 unknowns""" 
+
+v_fixed = np.linalg.solve(A, -b)
+print(f'the fixed point that satisfies intersection and fixed point condition = {v_fixed}')
+#shows [10 10]
+#THEREFORE, THE POINT OF INTERSECTION INDEED CORRESPONDS TO FIXED POINT V_SS
+#Plot determined nullclines and calculated v_ss in a single figure 
+
+#set up nullclines to plot across v1-v2 plane 
+v1 = np.linspace(0, 20, 100) #creates 100 evenly spaced v1 values between 0 and 20. 
+#these are points along the horizontal axis of my state space plane 
+
+#v1 nullcline: v2 = (10+2v1)/3 derived from row 1 of fixed point condition eq, we set v to 0 
+#we represent v2 as fn of v1 in order to plot a line even
+nullcline_1 = (10+2*v1)/3
+
+#v2-nullcline: 3v1-10/3
+nullcline_2 = (3*v1 -10)/2
+
+#for each of the 100 v1 values between 0 and 20, numpy will compute the corresponding v2 value 
+#so we get 100 pairs of points 
+
+#why 0-20? because our fixed point is at 10 and this range centres well on the plot 
+#so its just for convenience +
+
+#plotting our nullclines 
+
+fig, ax = plt.subplots(figsize=(6,6))
+
+#plot nullclines 
+ax.plot(v1, nullcline_1, color ='lightseagreen', label = 'v1-nullcline') 
+#ax.plot plots v1 on the x axis and v2 values on y axis
+#meaning the nullcline is a line 
+
+ax.plot(v1, nullcline_2, color='cornflowerblue',label='v2-nullcline')
+
+#plot our fixed point 
+ax.plot(v_fixed[0], v_fixed[1], marker='o',markersize = '8', color='indianred', label = 'fixed point (10,10)')
+#v_fixed[0] and v_fixed[1] indexes into the fixed point vector, 0 gives 10 ie v1 and 1 gives 10 ie v2
+
+#the nullclines are reference lines themselves 
+
+#plot labels and legends 
+ax.set_xlabel('v1')
+ax.set_ylabel('v2')
+ax.set_title('Task A: Nullclines and Fixed Point')
+ax.legend()
+plt.tight_layout()
+
+
+#TASK B: Solve the characteristic equation |A-lamI|=0 to find the eigenvalues of A and determine the stability of the fixed point.
+
+
+#where, A's diagonal matrix values are a_11-lam and a22-lam 
+#we compute the determinant of such a matrix (2x2) with the formula 
+#AD-BC : which are the diagonal values inside A multiplied and then subtracted 
+
+
+#I found that eigenvalues lam1 and lam 2 = ±sqrt(-5)
+#however, we cannot actually take the square root of our original result -5 
+#this is why we use the imaginary number i because by definition the sqrt(-1)=i 
+#therefore, lam 1 is +i*sqrt(5) and lam 2 is -i*sqrt(5)
+
+#The property of my matrix A is such that its diagonal entries are exact opposites of each other albeit having the same magnitude.
+#the real part ie the trace of the matrix A (sum of diagonal elements) is 0
+#the determinant of such a matrix is +i * sqrt(5) * -i*sqrt(5) 
+#and there exists a relationship between the trace and determinant of a matrix and its eigenvalues, which is that the trace is equal to the sum of the eigenvalues and the determinant is equal to the product of the eigenvalues. 
+#so, in our case, the trace is 0 because the eigenvalues are complex conjugates of each other, meaning they have the same magnitude but opposite signs in their imaginary parts, which results in their sum being zero.
+#there exists no real number that satisfies the characteristic equation, which is why we have to use complex numbers to express the eigenvalues.
+
+#and imaginary eigenvalues indicate that the system will exhibit oscillatory behavior, as the complex conjugate eigenvalues correspond to oscillations in the state space. 
+# The real part of the eigenvalues determines whether the oscillations grow, decay, or remain constant in amplitude over time. 
+# In our case, since the real part is zero, the oscillations will neither grow nor decay, resulting in a neutrally stable system with spiraling trajectories around the fixed point.
+#this is known as neutrally stable with spiralling, because the system will oscillate around the fixed point without converging to it or diverging away from it.
+
+#the function linear_order2() was given to us 
+
+
+def Factivation(X, Rmax, kappa):
+    return Rmax * np.tanh(X / kappa)
+
+def linear_order2(A: np.ndarray, B: np.ndarray, X0: np.ndarray):
+
+    """
+    A is the connectivity matrix
+    B is constant input to our system
+    X0 is the initial point for our trajectory
+    """
+
+    statesize = 10
+    tend = 10
+
+    # Calculate the steady state
+    Xss = np.linalg.solve(A, -B)
+
+    # Perform eigendecomposition of the connectivity matrix A
+    eigvals, eigvecs = np.linalg.eig(A)
+    lambda1, lambda2 = eigvals
+    E1, E2 = eigvecs[:, 0], eigvecs[:, 1]
+
+    xmin = np.floor(Xss[0] - statesize)
+    xmax = np.ceil(Xss[0] + statesize)
+    xi = np.linspace(xmin, xmax, 100)
+
+    ydx0i = -(A[0, 0] * xi + B[0]) / A[0, 1]
+    ydy0i = -(A[1, 0] * xi + B[1]) / A[1, 1]
+
+    ymin = np.floor(min(ydx0i.min(), ydy0i.min()))
+    ymax = np.ceil(max(ydx0i.max(), ydy0i.max()))
+
+    xv = np.linspace(xmin, xmax, 10)
+    yv = np.linspace(ymin, ymax, 10)
+    XV, YV = np.meshgrid(xv, yv)
+    DXV = A[0, 0] * XV + A[0, 1] * YV + B[0]
+    DYV = A[1, 0] * XV + A[1, 1] * YV + B[1]
+
+    t = np.linspace(0, tend, 100)
+    Xi = np.zeros((2, len(t)))
+    C = np.linalg.solve(eigvecs, X0 - Xss)
+    Xi[0, :] = np.real(C[0] * E1[0] * np.exp(lambda1 * t) + C[1] * E2[0] * np.exp(lambda2 * t) + Xss[0])
+    Xi[1, :] = np.real(C[0] * E1[1] * np.exp(lambda1 * t) + C[1] * E2[1] * np.exp(lambda2 * t) + Xss[1])
+
+    plt.figure()
+    plt.plot(xi, ydx0i, 'r', linewidth=2, label='dx/dt=0')
+    plt.plot(xi, ydy0i, 'b', linewidth=2, label='dy/dt=0')
+    plt.quiver(XV, YV, DXV, DYV, color='k', linewidth=1)
+    plt.plot(Xi[0, :], Xi[1, :], 'g', linewidth=4, label='Trajectory')
+    plt.plot(Xss[0], Xss[1], 'k+', markersize=10, linewidth=2, label='Steady-state')
+    plt.axhline(0, color='k', linestyle=':', linewidth=2)
+    plt.axvline(0, color='k', linestyle=':', linewidth=2)
+    plt.legend()
+    plt.xlabel('x')
+    plt.ylabel('y')
+    plt.show()
+
+    plt.figure()
+    plt.plot(t, Xi[0, :], 'r', linewidth=2, label='x(1)')
+    plt.plot(t, Xi[1, :], 'b', linewidth=2, label='y(1)')
+    plt.axhline(Xss[0], color='r', linestyle='--', linewidth=1, label='x_ss')
+    plt.axhline(Xss[1], color='b', linestyle='--', linewidth=1, label='y_ss')
+    plt.axhline(0, color='k', linestyle=':', linewidth=2)
+    plt.legend()
+    plt.xlabel('t')
+    plt.ylabel('x, y')
+    plt.show()
+
+#the function signature is linear_order2(A, B, X0). Where, A is the connectivity matrix 
+#B is the external input vector [-10 10], computed above and X0 is the initial condition
+#from where the trajectory starts 
+
+#we must choose an initial condition. Since the fixed point is at (10,10), we can start nearby
+#but no exactly on the fixed point : so, (3,3) for instance 
+
+X0 = np.array([3,3])
+
+#call the provided function
+linear_order2(A=A, B=b, X0=X0)
+plt.show()
+
+#what we expect to see from the plots of Task B 
+#plot 1- State Space
+""" The green trajectory is a closed loop that orbits around the fixed point (10,10) which is marked with a cross
+It never spirals inward or outward, it orbits as such until the end of time. The arrows show the flow 
+direction at every point in the state space - ie they push the trajectory together, around in a circle
+The red and blue lines are our nullclines crossing at the fixed point which we plotted in Task A"""
+
+#plot 2 - time evolution 
+""" Both v1 and v2 oscillate forever with a constant amplitude, they don't grown or decay. 
+they're basically sine waves that are almost at par with each other. the dashed blue line at y=10
+is the fixed point. 
+So, the system orbits around it but never reaches it. """
+
+#therefore the behaviour is neutral stability with spiralling, 
+# and at any point a slight push would make it spiral inward or outward
+#we predicted the imaginary part of the eigenvalue to be responsible for making the system spiral 
+#if the real part were 2 then it the trajectory would be scaled by 2 or if it was 0, there would be 
+#no growth or decay. The amplitude of the oscillation is constant. 
+
+#Collapse would happen when determinant of A itself is zero, geometrically, the matrix collapses space
+#it squashes the whole plane onto a single line and every point gets mapped onto it. 
+#now, in this case, which point v_ss satisidies A*v_ss = -b? If A collapsed plane into a single line
+#then many starting points v_ss all produce same output after multiplication with A, you cannot 
+#tell them apart anymore, the collapse erased that info 
+
+
+""" the general solution to my system is v(t) = C1*E1*exp(lam1*t) + C2*E2*exp(lam2*t) + v_ss where C1 and C2 are constants determined by the initial condition,
+ E1 and E2 are the eigenvectors corresponding to the eigenvalues lam1 and lam2, and v_ss is the steady state solution.
+
+ c1 and c2 are determined by the initial condition X0, which is the point where we start our trajectory.
+
+"""
+
+
+#----------------TASK C--------------------
+
+#Simulate the time evolution of the system for a suitable initial condition, 
+#v0 = [9,9]. After setting this initial activity, iteratively compute subsequent 
+#activity vectors vi. Proceed from time 0 to time 10 in steps of delta t = 0.0001.
+#At each iteration step compute the change in activity dv/dt = A*vi + b:
+# *** and update the activity vector using Euler's method: vi+1 = vi + dv/dt * delta t.***
+
+#save all intermediate results vi and plot the development as a fn of time
+#optional : plot trajectory in state space superimposed on isoclines 
+
+#Describe the behaviour of the system as i change K to K = 50 or v0 = [14,14]
+#how does the frequency and amplitude of oscillations or trajectory change?
+#calculate and plot direction of development from all possible states 
+#in the state space in the v1,v2 ∈[5,15] interval
+
+#EXPLAIN TASK C AND WHY NONLINEARITY AND WHAT IS F(X) AND JACOBIAN MATRIX AND HOW IT RELATES TO EIGENVALUES AND STABILITY ANALYSIS
+
+#parameters for activation function 
+Rmax = 10 #maximum firing rate of population, saturation point of activation function, mimicks biological ceiling 100-200hz/s
+kappa = 1 #k that controls steepness of s curve (tanh function)
+
+#for this task, k has been set to 1 and to 50 
+
+#time parameters 
+dt = 0.0001 #time step for numerical integration with euler's method where we integrate all rates of change over time
+#this nudges the system forward in time by small increments, allowing us to approximate the continuous dynamics of the system.
+T = 10 #total simulation time from t = 0 to t=10
+t = np.arange(0, T, dt) #creates an array of time points from 0 to 10 with a step of 0.0001
+
+#initial condition 
+v0 = np.array([9, 9]) #starting point for our trajectory in state space, close to fixed point but not exactly on it
+#for this task  v0 or initial condition has been set to (9,9), (3,3) and (14,14) to see how system behaves from starting points 
+#near and far away in diff dir from fixed points 
+
+#building the simulation loop 
+#we store all the activity states in the simulation in an array where one row is a time point and two columns for v1 and v2
+activity = np.zeros((len(t), 2)) #initialize an array to store activity states - storage array filled w zeros
+activity[0] = v0 #set the first row to our initial condition
+
+#simulation loop using Euler's method 
+v = v0.copy() #we copy initial condition to v and it keeps updating 
+for i in range(1, len(t)):
+    drive = A@v + b #total input computed to each population at current state. This is the linear drive before we insert non-LINEARITY 
+    dv = Factivation(drive, Rmax, kappa) #passes drive through sigmoidal activation function to give rate of change at current state
+    v = v + dv * dt #update activity vector using Euler's method, we nudge the system forward in time by small increments
+    activity[i] = v #store updates activity states each time in the activity array 
+    
+#plotting 
+fig, ax = plt.subplots(figsize=(6,6))
+ax.plot(t, activity[:, 0], label='v1', color='lightseagreen')
+ax.plot(t, activity[:, 1], label='v2', color='cornflowerblue')
+
+#mark fixed point as axhline at y = 10 for both v1 and v2
+ax.axhline(10, color='indianred', linestyle='--', label='fixed point (10,10)')
+    
+ax.set_xlabel('Time (s)')
+ax.set_ylabel('Activity')
+ax.set_title('Task C: Time Evolution of Activity')
+ax.legend()
+plt.tight_layout()
+plt.show()
+
+#FREQUENCY: HOW MANY OSCILLATIONS HAPPEN PER SECOND - comes from eigenvalues where sqrt(5) is the angular frequency ie 
+#how fast my trajectory rotates around the fixed point in radians per second (it is a property - det of A)
+
+#we convert this to cycles per second by just dividing by 2pi : f = sqrt(5) / (2 * np.pi) = 0.356
+
+#at kappa 1 and rmax 10, oscillation is sustained, v1 and v2 are almost on top of each other like sine waves in task B 
+#amplitude in this case is small between 9 and 11 since we started close to the fixed point 
+
+#let's increase K to 50 and re run- the curve should be gentler now 
+#let's keep kappa 1 but increase our x0 which is the initial condition from [9,9] to [14,14]
+#lets take it away ish the fixed point, maybe 3,3
+
+#when k is 50 and x0 is [9,9] - oscillation is extremely slow, completes one full cycle in 10 seconds 
+#frequency is low and amplitude is small 
+#large kappa means curve is gentle and Factivation stays linear almost for 
+#widen range of inputs, so non-linearity is less pronounced, its a slow almost linear system 
+ 
+#when k is 1 and x0 is [14,14], the starting point is away from fixed point 
+#much larger amplitude between 5 an d 15 and roughly sustained oscillations 
+#starting further away from fixed points means the initial deviation is larger 
+#as a consequence, obviously, naturally, the orbit is wider and the frequency is determined by eigenvalues - sqrt(5), not where I start 
+#so frequency is same only amplitude changes when i stay around the linear regime of the fixed point 
+
+#BUT 
+#when i move rly far away like to [3,3] - the amplitude is even larger and oscillations between 2 and 18, frequency is lower and 
+#less smooth, like sharp triangles and not waves 
+#THIS IS BECAUSE OF THE NON-LINEARITY WHICH CREPT IN SO FAR AWAY FROM THE LINEAR REGIME OF THE FIXED POINT. Tanh sigmoidal function
+#distorts the shape of this oscillation and the sine waves shapes are now triangular and broken down. 
+
+""" Therefore, distance from the fixed point controls the amplitude. Kappa controls linearity (how quickly it saturates to max activity)
+the eigenvalues lam1 and 2 which is sqrt(5) determine the frequency of my oscillations which is a property of the network from 
+Matrix A : global description as compared to local linear approximation which is what the Jacobian matrix does, it captures local 
+behavior depending on how far away i am from the fixed point, with A matrix, the linear transformation itself implies a constant rate 
+of change no matter where you are in the state space. 
+
+"""
+
+#plotting the direction field plot
+#the direction field shows the direction of movement of every point in my state space - a map of arrows that show where my 
+#system  would go from any starting point 
+
+#at any point v1,v2 in the state space, i can compute dv/dt = F (A*v + b) - resulting in a vector that shows how fast and in what 
+#direction the system is moving at that point. If i compute the same thing at a grid of points and draw arrows, the snapshot I get 
+#for this particular point now shows me the full picture of activity for the system in state space. 
+
+#create a grid of points in the state space
+v1_range = np.linspace(5, 15, 20) #20 points between 5 and 15 for v1
+v2_range = np.linspace(5, 15, 20) #20 points between 5 and 15 for v2
+V1, V2 = np.meshgrid(v1_range, v2_range) #creates a grid of points in the state space
+
+#compute direction at each grid point 
+DV1 = np.zeros_like(V1) #creates an array of zeros with the same shape as V1
+DV2 = np.zeros_like(V2) #creates an array of zeros with same shape as V2 
+
+for i in range(V1.shape[0]):
+    for j in range(V1.shape[1]):  
+        #nested loop to loop computation through every row and column, where shape 0 is no. of rows and shape 1 is columns 
+        v = np.array([V1[i, j], V2[i, j]]) #picks out the v1 and v2 coordinates at grid position (i,j) and turns them into a state vector
+        dv = Factivation(A @ v + b, Rmax, kappa) #computes the direction of movement at that point by passing the drive through activation function
+        DV1[i, j] = dv[0] #stores the change in v1 direction
+        DV2[i, j] = dv[1] #stores the change in v2 direction
+
+
+#plot this 
+
+fig, ax = plt.subplots(figsize=(6,6))
+ax.quiver(V1, V2, DV1, DV2, color='k',alpha=0.7)
+ax.plot(10,10, marker = 'o', markersize = 8, label = 'fixed point', color = 'indianred')
+ax.set_xlabel('v1') 
+ax.set_ylabel('v2')
+ax.set_title('Task C: Direction Field (k=50, x0=[14,14])')
+ax.legend()
+plt.tight_layout()
+plt.show()
+
+#for kappa = 1 : arrows near fixed point rotate around it, fixed point is centre of this rotatinal flow 
+#for kappa = 50: field looks identical for plots with this value regardless of initial condition because the direction field 
+#does not depend on where i start but only on network parameters. however, arrows near fixed point for kappa=50 are smaller than k=1
+#the flow is weaker there, which is why kappa=50 produced slow oscillations (its a gentle s curve) and system isnt being pushed much 
+
+#the direction field is a property of the network itself - matrix A, b and activation function (rmax, kappa, XO). It does not change
+#with the initial comndition. Images 1 and 3 are same while images 2 and 4 are same because the initial condition only affects 
+#where flow starts but not the underlying flow 
