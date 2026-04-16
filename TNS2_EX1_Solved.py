@@ -514,8 +514,7 @@ for i in range(num_inputs):
             linewidth=1.5,
             label=f'input h{i+1}')
     # step plot of h — flat at zero everywhere except the two stimulated neurons
-    # this is the red rectangle your friend has
-
+    
     # ── Draw the final steady state as a thick dark line ──────────────────────
     ax.plot(node_index, activity_array[-1],
             color='darkblue',
