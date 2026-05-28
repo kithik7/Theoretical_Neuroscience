@@ -375,5 +375,12 @@ plt.tight_layout()
 plt.savefig('ex4_supervised_learning/decoding_results.png')
 plt.close()
 
+"""
+During training, neurons that fire strongly for a stimulus have learned strong weights for that stimulus. 
+During testing, those same neurons fire strongly again through those weights.
+So the neurons firing most strongly are exactly the ones whose preferred positions best match the true stimulus position: 
+they earned their loud voice during training.
+The response weighted average therefore naturally pulls the estimate toward the correct answer 
+because the most relevant neurons are shouting the loudest.
 
-
+"""
